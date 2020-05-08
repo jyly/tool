@@ -1,0 +1,17 @@
+import org.fastica.FastICA;
+import org.fastica.FastICAException;
+public double[][] fastica( double mixedSignal[][]) {
+		int x = mixedSignal.length;
+		int y = mixedSignal[0].length;
+	
+		double[][] cleanSignal=null; //分离后的信号源
+		try {
+			FastICA fica = new FastICA(mixedSignal, 2);//混合信号、猜测的信号源数
+			cleanSignal = fica.getICVectors();
+		} catch (FastICAException e) {
+			e.printStackTrace();
+		}
+		
+
+		return cleanSignal;
+	}
