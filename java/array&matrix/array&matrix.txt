@@ -1,0 +1,19 @@
+	// 序列转矩阵
+	public double[] arraytomatrix(ArrayList<Double> data) {
+		int datalength = data.size();
+		double[] matrix = new double[datalength];
+		for (int i = 0; i < datalength; i++) {
+			matrix[i] = data.get(i);
+		}
+		return matrix;
+	}
+
+	// 矩阵转序列
+	public ArrayList<Double> matrixtoarray(double[] data) {
+		int datalength = data.length;
+		ArrayList<Double> array = new ArrayList<Double>();
+		for (int i = 0; i < datalength; i++) {
+			array.add(data[i]);
+		}
+		return array;
+	}

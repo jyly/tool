@@ -1,0 +1,60 @@
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.TransformType;
+import org.apache.commons.math3.complex.Complex;
+
+
+FastFourierTransformer ffts = new FastFourierTransformer(DftNormalization.STANDARD);
+
+double[] tempdatamatrix = tools.to2power(datamatrix);
+
+Complex[] datacomplex = ffts.transform(tempdatamatrix, TransformType.FORWARD);
+
+tools.calresult(datacomplex,200);
+
+public ArrayList<Double> fluency = new ArrayList<Double>();
+public ArrayList<Double> fftscore = new ArrayList<Double>();
+
+//不满2的幂次方的矩阵，在后面补零
+	public double[] to2power(double[] data) {
+		ArrayList<Double> tempmatrix = new ArrayList<Double>();
+		int datalen = data.length;
+	
+		for (int i = 0; i < datalen; i++) {
+			tempmatrix.add(data[i]);
+		}
+		int flag=0;
+		if (datalen < 256) {
+			flag=256;
+			
+		} else {
+			if (datalen < 512) {
+				flag=512;
+			} else {
+				flag=1024;
+			}
+		}
+
+		for(int i=datalen;i<flag;i++) {
+			tempmatrix.add((double)0);
+		}
+		
+		double []matrix=arraytomatrix(tempmatrix);
+		System.out.println(matrix.length);
+		return matrix;
+	}
+
+public void calresult(Complex[] x, double fre) {
+		fftscore.clear();
+		fluency.clear();
+		int xlen = (int) (x.length / 2);
+		for (int i = 0; i < xlen; i++) {
+			fftscore.add(Math.sqrt(x[i].getReal() * x[i].getReal() + x[i].getImaginary() * x[i].getImaginary()) / (double) (x.length));
+			fluency.add(i / (double) (x.length) * fre);
+		}
+
+		for (int i = 0; i < xlen; i++) {
+			System.out.println("fft" + i + "=" + fftscore.get(i) + "   fluency" + i + "=" + fluency.get(i));
+		}
+	}
+
