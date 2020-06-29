@@ -18,7 +18,9 @@ def get_auto_corr(timeSeries,k):
 	timeSeries2 = timeSeries[k:]
 	timeSeries_mean = np.mean(timeSeries)
 
-	timeSeries_var = np.array([i**2 for i in timeSeries-timeSeries_mean]).sum()
+	# timeSeries_var = np.array([i**2 for i in timeSeries-timeSeries_mean]).sum()
+	timeSeries_var = np.var(timeSeries)*l
+
 	auto_corr = 0
 	for i in range(l-k):
 		temp = (timeSeries1[i]-timeSeries_mean)*(timeSeries2[i]-timeSeries_mean)/timeSeries_var

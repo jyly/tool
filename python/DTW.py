@@ -112,6 +112,9 @@ s2 = [1, 2, 3, 4, 5, 5]
 
 
 display(s1, s2)
+
+
+
 from dtw import dtw
 manhattan_distance = lambda x, y: np.abs(x - y)
 d, cost_matrix, acc_cost_matrix, path = dtw(s1, s2, dist=manhattan_distance)
