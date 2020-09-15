@@ -8,8 +8,7 @@ import numpy as np
 # print(mnist.test.num_examples)
 
 
-mnist=tf.keras.datasets.mnist
-(x_,y_),(x_1,y_1)=mnist.load_data()
+
 
 
 
@@ -75,6 +74,11 @@ def siamese(inputs,keep_prob):
             b_fc3 = tf.Variable(tf.zeros(2),name='b_fc3')
             fc3 = tf.add(tf.matmul(bn_fc2,w_fc3),b_fc3)
         return fc3
+
+
+mnist=tf.keras.datasets.mnist
+(x_,y_),(x_1,y_1)=mnist.load_data()
+
 
 lr = 0.01
 iterations = 20000

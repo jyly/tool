@@ -1,6 +1,4 @@
 import os     
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" 
-os.environ["CUDA_VISIBLE_DEVICES"]="-1"    
 os.environ["PATH"] += os.pathsep + 'E:/system/python/graphviz/bin'
 import tensorflow as tf
 import keras
@@ -21,7 +19,7 @@ from keras import regularizers
 
 
 
-def simplemoel(input_shape):
+def simplemoel_mlp(input_shape):
     '''Base network to be shared (eq. to feature extraction).
     '''
     input = Input(shape=input_shape)
@@ -35,19 +33,25 @@ def simplemoel(input_shape):
     x = Dense(128, activation='relu')(x)
 
 
+    return Model(input, x)
+
+def simplemoel_conv(input_shape):
     '''
     Base network to be shared.
     '''
     # 卷积层
-    # x = Conv2D(32, (7, 7), activation='relu', input_shape=input_shape, kernel_regularizer=regularizers.l2(0.01),
-    #            bias_regularizer=regularizers.l1(0.01))(input)
-    # x = MaxPooling2D()(x)
-    # x = Conv2D(64, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.01),
-    #            bias_regularizer=regularizers.l1(0.01))(x)
-    # x = Flatten()(x)
-    # x = Dense(128, activation='relu', kernel_regularizer=regularizers.l2(0.01),
-    #           bias_regularizer=regularizers.l1(0.01))(x)
+    input = Input(shape=input_shape)
 
+    x = Conv2D(16, (3, 3), activation='relu', input_shape=input_shape,padding='same')(input)
+    x = Dropout(0.1)(x)
 
+    x = Conv2D(32, (3, 3), activation='relu',padding='same')(x)
+    x = Dropout(0.1)(x)
+
+    x = Conv2D(32, (3, 3), activation='relu',padding='same')(x)
+    x = Dropout(0.2)(x)
+
+    x = Flatten()(x)
+    x = Dense(128, activation='relu')(x)
     return Model(input, x)
 
