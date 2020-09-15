@@ -2,25 +2,24 @@
 import numpy
 from sklearn.preprocessing import MinMaxScaler,StandardScaler
 
-#标准化
-def std(data):
-    filtdata=[]
-	data=np.array(data).reshape(-1,1)
-	minMax = MinMaxScaler()
-	data= minMax.fit_transform(data)
-	for knum in data:
-		filtdata.append(knum[0])
-	return filtdata
+def minmaxscale(data):
+	scaler = preprocessing.MinMaxScaler()
+	data=scaler.fit_transform(np.array(data).reshape(-1,1))
+	data=[i[0] for i in data]
+	return data
 
-#0-1化
-def minmax(data):
-	filtdata=[]
-    data=np.array(data).reshape(-1,1)
-    stdard = StandardScaler()
-    data= stdard.fit_transform(data)
-    for knum in data:
-        filtdata.append(knum[0])
-    return filtdata
+def standardscale(data):
+	scaler = preprocessing.StandardScaler()
+	data=scaler.fit_transform(np.array(data).reshape(-1,1))
+	data=[i[0] for i in data]
+	return data
+
+
+def normalscale(data):
+	scaler = preprocessing.Normalizer(norm='l1')
+	data=scaler.fit_transform(np.array(data).reshape(-1,1))
+	data=[i[0] for i in data]
+	return data
 
 
 #中值滤波

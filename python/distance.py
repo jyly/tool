@@ -26,3 +26,9 @@ import scipy.spatial.distance as dist  # 导入scipy距离公式
 matV = mat([[1,1,0,1,0,1,0,0,1],[0,1,1,0,0,0,1,1,1]])
 
 print ("dist.jaccard:", dist.pdist(matV,'jaccard'))
+
+up=np.double(np.bitwise_and((x != y),np.bitwise_or(x != 0, y != 0)).sum())
+down=np.double(np.bitwise_or(x != 0, y != 0).sum())
+d1=(up/down)
+
+print ("dist.jaccard:", d1)

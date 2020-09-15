@@ -1,7 +1,7 @@
 # _*_ coding: utf-8 _*_
 from os import listdir
 import numpy as np 
-
+from skfeature.function.similarity_based.fisher_score import fisher_score 
 
 def fisher_criterion(v1, v2, num): #特征列1，目标列2，用户数
 	userchardata=[]
@@ -18,7 +18,14 @@ def fisher_criterion(v1, v2, num): #特征列1，目标列2，用户数
 		# print 	inter_class,intra_class
 	return (inter_class)/(intra_class)
 
-def compute_fisher(data,target,num):
+def compute_fisher(data,target):
+	targetnum=[]
+	for i in range(len(target)):
+		if target[i] not in targetnum:
+			targetnum.append(target[i])
+	targetnum=len(targetnum)
+	print(targetnum)
+
 	comdata=[]
 	for i in range(0,len(data[0])):
 		comdata.append([])
@@ -26,5 +33,6 @@ def compute_fisher(data,target,num):
 			comdata[i].append(data[j][i])
 	fisherscore=[]		
 	for i in range(0,len(comdata)):
-		fisherscore.append(fisher_criterion(comdata[i],target,num))
+		# fisherscore.append(fisher_criterion(comdata[i],target,targetnum))
+		fisherscore.append(fisher_score.fisher_score(comdata[i],target))
 	return fisherscore

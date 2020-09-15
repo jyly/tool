@@ -14,8 +14,8 @@ def lowpass(data,low,fre,order=3):#只保留低于low频率的信号，fre是采
 	return data
 
 def bandpass(data,data,start,end,fre,order=3):#只保留start到end之间的频率的信号，fre是采样频率,order是滤波器阶数
-	wa = start / (fre / 2) 
+	ws = start / (fre / 2) 
 	we = end / (fre / 2) 
-	b, a = signal.butter(order, [wa,we], 'bandpass')
+	b, a = signal.butter(order, [ws,we], 'bandpass')
 	data = signal.filtfilt(b, a, data)
 	return data
