@@ -1,0 +1,183 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/18/07 22:29:48
+eg0418.asm						     Page 1 - 1
+
+
+				;eg0418.asm
+					include io32.inc
+			      C .nolist
+			      C .list
+			      C 
+ 00000000				.data
+ = 0000000A			count	= 10
+ 00000000  0000000A [		array	dword count dup(0)
+	    00000000
+	   ]
+ 00000028 00000000		temp	dword ?
+ 0000002C  0000001E [		readbuf	db 30 dup(0)
+	    00
+	   ]
+ 00000000				.code
+ 00000000			start:
+ 00000000  B9 0000000A			mov ecx,count
+ 00000005  BB 00000000 R		mov ebx,offset array
+ 0000000A  E8 00000014		again:	call read	; 调用子程序，输入一个数据
+ 0000000F  A1 00000028 R		mov eax,temp	; 获得出口参数
+ 00000014  89 03			mov [ebx],eax	; 存放到数据缓冲区
+ 00000016  83 C3 04			add ebx,4
+ 00000019  49				dec ecx
+ 0000001A  75 EE			jnz again
+
+					exit 0
+
+ 00000023			read	proc	; 输入有符号十进制数的子程序
+ 00000023  50				push eax	; 出口参数：变量TEMP＝补码表示的二进制数值
+ 00000024  53				push ebx	; 说明：负数用"－"引导
+ 00000025  51				push ecx
+ 00000026  52				push edx
+ 00000027  B8 0000002C R	read0:	mov eax,offset readbuf
+ 0000002C  E8 00000000 E		call readmsg	; 输入一个字符串
+ 00000031  85 C0			test eax,eax
+ 00000033  74 40			jz readerr	; 没有输入数据，转向错误处理
+ 00000035  83 F8 0C			cmp eax,12
+ 00000038  77 3B			ja readerr	; 输入超过12个字符，转向错误处理
+ 0000003A  BA 0000002C R		mov edx,offset readbuf	; EDX指向输入缓冲区
+ 0000003F  33 DB			xor ebx,ebx	; EBX保存结果
+ 00000041  33 C9			xor ecx,ecx	; ECX为正负标志，0为正，－1为负
+ 00000043  8A 02			mov al,[edx]	; 取一个字符
+ 00000045  3C 2B			cmp al,'+'	; 是"＋"，继续
+ 00000047  74 09			jz read1
+ 00000049  3C 2D			cmp al,'-'	; 是"－"，设置－1标志
+ 0000004B  75 0C			jnz read2
+ 0000004D  B9 FFFFFFFF			mov ecx,-1
+ 00000052  42			read1:	inc edx	; 取下一个字符
+ 00000053  8A 02			mov al,[edx]
+ 00000055  84 C0			test al,al	; 是结尾0，转向求补码
+ 00000057  74 28			jz read3
+ 00000059  3C 30		read2:	cmp al,'0'	; 不是0～9之间的数码，则输入错误
+ 0000005B  72 18			jb readerr
+ 0000005D  3C 39			cmp al,'9'
+ 0000005F  77 14			ja readerr
+ 00000061  2C 30			sub al,30h	; 是0～9之间的数码，则转换为二进制数
+ 00000063  6B DB 0A			imul ebx,10	; 原数值乘10：EBX＝EBX×10
+ 00000066  72 0D			jc readerr	; CF＝1，说明乘积溢出，输入数据超出32位范围，出错
+ 00000068  0F B6 C0			movzx eax,al	; 零位扩展，便于相加
+ 0000006B  03 D8			add ebx,eax	; 原数值乘10后，与新数码相加
+ 0000006D  81 FB 80000000		cmp ebx,80000000h	; 数据超过231，出错
+ 00000073  76 DD			jbe read1	; 继续转换下一个数位
+ 00000075  B8 0000009C R	readerr:	mov eax,offset errmsg	; 显示出错信息
+ 0000007A  E8 00000000 E		call dispmsg
+ 0000007F  EB A6			jmp read0
+					;
+ 00000081  85 C9		read3:	test ecx,ecx	; 判断是正数还是负数
+ 00000083  74 04			jz read4
+ 00000085  F7 DB			neg ebx	; 是负数，进行求补
+ 00000087  EB 08			jmp read5
+ 00000089  81 FB 7FFFFFFF	read4:	cmp ebx,7fffffffh	; 正数超过231-1，出错
+ 0000008F  77 E4			ja readerr
+ 00000091  89 1D 00000028 R	read5:	mov temp,ebx	; 设置出口参数
+ 00000097  5A				pop edx
+ 00000098  59				pop ecx
+ 00000099  5B				pop ebx
+ 0000009A  58				pop eax
+ 0000009B  C3				ret	; 子程序返回
+ 0000009C 49 6E 70 75 74	errmsg	byte 'Input error, enter again: ',0
+	   20 65 72 72 6F
+	   72 2C 20 65 6E
+	   74 65 72 20 61
+	   67 61 69 6E 3A
+	   20 00
+ 000000B7			read	endp
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/18/07 22:29:48
+eg0418.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000004A Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000B7 Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+read . . . . . . . . . . . . . .	P Near	 00000023 _TEXT	Length= 00000094 Public STDCALL
+  read0  . . . . . . . . . . . .	L Near	 00000027 _TEXT	
+  read1  . . . . . . . . . . . .	L Near	 00000052 _TEXT	
+  read2  . . . . . . . . . . . .	L Near	 00000059 _TEXT	
+  readerr  . . . . . . . . . . .	L Near	 00000075 _TEXT	
+  read3  . . . . . . . . . . . .	L Near	 00000081 _TEXT	
+  read4  . . . . . . . . . . . .	L Near	 00000089 _TEXT	
+  read5  . . . . . . . . . . . .	L Near	 00000091 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+again  . . . . . . . . . . . . .	L Near	 0000000A _TEXT	
+array  . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+count  . . . . . . . . . . . . .	Number	 0000000Ah   
+dispbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispcrlf . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprf . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+errmsg . . . . . . . . . . . . .	Byte	 0000009C _TEXT	
+readbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbuf  . . . . . . . . . . . .	Byte	 0000002C _DATA	
+readbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
+temp . . . . . . . . . . . . . .	DWord	 00000028 _DATA	
+
+	   0 Warnings
+	   0 Errors

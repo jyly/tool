@@ -1,0 +1,130 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/18/07 21:15:36
+eg0415b.asm						     Page 1 - 1
+
+
+				;eg0415b.asm
+					include io32.inc
+			      C .nolist
+			      C .list
+			      C 
+ 00000000				.data
+ 00000000 45 41 58 3D		regd	byte 'EAX=',8 dup(0),'H',0
+	   00000008 [
+	    00
+	   ] 48 00
+ 00000000				.code
+ 00000000			start:
+ 00000000  B8 1234ABCD			mov eax,1234abcdh
+ 00000005  BB 00000004			mov ebx,4
+ 0000000A  B9 00000008			mov ecx,8	; 8位十六进制数
+ 0000000F  C1 C0 04		again:	rol eax,4
+ 00000012  50				push eax
+ 00000013  E8 0000001C			call htoasc	; 调用子程序
+ 00000018  88 83 00000000 R		mov regd[ebx],al
+ 0000001E  58				pop eax
+ 0000001F  43				inc ebx
+ 00000020  49				dec ecx
+ 00000021  75 EC			jnz again
+ 00000023  B8 00000000 R		mov eax,offset regd
+ 00000028  E8 00000000 E		call dispmsg	; 显示
+
+					exit 0
+					; 子程序
+ 00000034			htoasc	proc	; 将AL低4位表达的一位十六进制数转换为ASCII码
+ 00000034  53				push ebx
+ 00000035  BB 0000003F R		mov ebx,offset ASCII 
+ 0000003A  24 0F			and al,0fh	; 取得一位十六进制数
+ 0000003C  D7				xlat ASCII	; 换码：AL←CS:[EBX＋AL]，注意数据在代码段CS
+ 0000003D  5B				pop ebx
+ 0000003E  C3				ret
+					; 子程序的局部数据
+ 0000003F 30 31 32 33 34	ASCII	byte '0123456789ABCDEF'
+	   35 36 37 38 39
+	   41 42 43 44 45
+	   46
+ 0000004F			htoasc	endp
+					
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/18/07 21:15:36
+eg0415b.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000000E Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000004F Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+htoasc . . . . . . . . . . . . .	P Near	 00000034 _TEXT	Length= 0000001B Public STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+ASCII  . . . . . . . . . . . . .	Byte	 0000003F _TEXT	
+again  . . . . . . . . . . . . .	L Near	 0000000F _TEXT	
+dispbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispcrlf . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprf . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+regd . . . . . . . . . . . . . .	Byte	 00000000 _DATA	
+start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
+
+	   0 Warnings
+	   0 Errors

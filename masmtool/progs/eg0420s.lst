@@ -1,0 +1,245 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/19/07 15:14:34
+eg0420s.asm						     Page 1 - 1
+
+
+				;eg0420s.asm（子程序文件）
+					include io32.inc
+			      C .nolist
+			      C .list
+			      C 
+					public read, write, mean	; 子程序共用
+					extern temp:dword	; 外部变量
+ 00000000				.data
+ 00000000  0000000C [		writebuf	byte 12 dup(0)	; 显示缓冲区
+	    00
+	   ]
+ 0000000C  0000001E [		readbuf		byte 30 dup(0)
+	    00
+	   ]
+
+ 00000000				.code
+ 00000000			write	proc c	; 显示有符号十进制数的子程序，EAX＝入口参数
+ 00000000  53				push ebx	; 保护寄存器
+ 00000001  51				push ecx
+ 00000002  52				push edx
+ 00000003  B9 0000000B			mov ecx,sizeof writebuf-1	; 显示缓冲区清0
+ 00000008  C6 81 00000000 R	write0:	mov writebuf[ecx],0
+	   00
+ 0000000F  83 E9 01			sub ecx,1
+ 00000012  73 F4			jnc write0
+ 00000014  BB 00000000 R		mov ebx,offset writebuf	; EBX指向显示缓冲区
+ 00000019  85 C0			test eax,eax	; 判断数据是零、正数或负数
+ 0000001B  75 05			jnz write1	; 不是零，跳转
+ 0000001D  C6 03 30			mov byte ptr [ebx],'0'	; 是零，设置"0"
+ 00000020  EB 27			jmp write5	; 转向显示
+ 00000022  79 06		write1:	jns write2	; 是正数，跳转
+ 00000024  C6 03 2D			mov byte ptr [ebx],'-'	; 是负数，设置负号"－"
+ 00000027  43				inc ebx
+ 00000028  F7 D8			neg eax	; 数据求补（绝对值）
+ 0000002A  B9 0000000A		write2:	mov ecx,10
+ 0000002F  51				push ecx	; 10压入堆栈，作为退出标志
+ 00000030  83 F8 00		write3:	cmp eax,0	; 数据（商）为零，转向保存
+ 00000033  74 0A			jz write4 
+ 00000035  33 D2			xor edx,edx	; 零位扩展被除数为EDX.EAX
+ 00000037  F7 F1			div ecx	; 数据除以10：EDX.EAX÷10
+ 00000039  83 C2 30			add edx,30h	; 余数（0～9）转换为ASCII码
+ 0000003C  52				push edx	; 数据各位先低位后高位压入堆栈
+ 0000003D  EB F1			jmp write3
+ 0000003F  5A			write4:	pop edx	; 数据各位先高位后低位弹出堆栈
+ 00000040  3B D1			cmp edx,ecx	; 是结束标志10，转向显示
+ 00000042  74 05			je write5
+ 00000044  88 13			mov [ebx],dl	; 数据保存到缓冲区
+ 00000046  43				inc ebx
+ 00000047  EB F6			jmp write4
+ 00000049  B8 00000000 R	write5:	mov eax,offset writebuf
+ 0000004E  E8 00000000 E		call dispmsg
+ 00000053  5A				pop edx	; 恢复寄存器
+ 00000054  59				pop ecx
+ 00000055  5B				pop ebx
+ 00000056  C3				ret	; 子程序返回
+ 00000057			write	endp
+
+ 00000057			read	proc c	; 输入有符号十进制数的子程序
+ 00000057  50				push eax	; 出口参数：变量TEMP＝补码表示的二进制数值
+ 00000058  53				push ebx	; 说明：负数用"－"引导
+ 00000059  51				push ecx
+ 0000005A  52				push edx
+ 0000005B  B8 0000000C R	read0:	mov eax,offset readbuf
+ 00000060  E8 00000000 E		call readmsg	; 输入一个字符串
+ 00000065  85 C0			test eax,eax
+ 00000067  74 3A			jz readerr	; 没有输入数据，转向错误处理
+ 00000069  83 F8 0C			cmp eax,12
+ 0000006C  77 35			ja readerr	; 输入超过12个字符，转向错误处理
+ 0000006E  BA 0000000C R		mov edx,offset readbuf	; EDX指向输入缓冲区
+ 00000073  33 DB			xor ebx,ebx	; EBX保存结果
+ 00000075  33 C9			xor ecx,ecx	; ECX为正负标志，0为正，－1为负
+ 00000077  8A 02			mov al,[edx]	; 取一个字符
+ 00000079  3C 2B			cmp al,'+'	; 是"＋"，继续
+ 0000007B  74 09			jz read1
+ 0000007D  3C 2D			cmp al,'-'	; 是"－"，设置－1标志
+ 0000007F  75 0C			jnz read2
+ 00000081  B9 FFFFFFFF			mov ecx,-1
+ 00000086  42			read1:	inc edx	; 取下一个字符
+ 00000087  8A 02			mov al,[edx]
+ 00000089  84 C0			test al,al	; 是结尾0，转向求补码
+ 0000008B  74 22			jz read3
+ 0000008D  3C 30		read2:	cmp al,'0'	; 不是0～9之间的数码，则输入错误
+ 0000008F  72 12			jb readerr
+ 00000091  3C 39			cmp al,'9'
+ 00000093  77 0E			ja readerr
+ 00000095  2C 30			sub al,30h	; 是0～9之间的数码，则转换为二进制数
+ 00000097  6B DB 0A			imul ebx,10	; 原数值乘10：EBX＝EBX×10
+ 0000009A  72 07			jc readerr	; CF＝1，说明乘积溢出，输入数据超出32位范围，出错
+ 0000009C  0F B6 C0			movzx eax,al	; 零位扩展，便于相加
+ 0000009F  03 D8			add ebx,eax	; 原数值乘10后，与新数码相加
+ 000000A1  73 E3			jnc read1	; CF＝0，继续转换下一个数位
+						; CF＝1，说明输入数据超出32位范围，出错
+ 000000A3  B8 000000D2 R	readerr:	mov eax,offset errmsg
+ 000000A8  E8 00000000 E		call dispmsg
+ 000000AD  EB AC			jmp read0
+					;
+ 000000AF  85 C9		read3:	test ecx,ecx	; 判断是正数还是负数
+ 000000B1  74 0C			jz read4
+ 000000B3  81 FB 80000000		cmp ebx,80000000h	; 负数超过231，出错
+ 000000B9  77 E8			ja readerr
+ 000000BB  F7 DB			neg ebx	; 是负数，进行求补
+ 000000BD  EB 08			jmp read5
+ 000000BF  81 FB 7FFFFFFF	read4:	cmp ebx,7fffffffh	; 正数超过231-1，出错
+ 000000C5  77 DC			ja readerr
+ 000000C7  89 1D 00000000 E	read5:	mov temp,ebx	; 设置出口参数
+ 000000CD  5A				pop edx
+ 000000CE  59				pop ecx
+ 000000CF  5B				pop ebx
+ 000000D0  58				pop eax
+ 000000D1  C3				ret	; 子程序返回
+ 000000D2 49 6E 70 75 74	errmsg	byte 'Input error, enter again: ',0
+	   20 65 72 72 6F
+	   72 2C 20 65 6E
+	   74 65 72 20 61
+	   67 61 69 6E 3A
+	   20 00
+ 000000ED			read	endp
+
+ 000000ED			mean	proc c	; 计算32位有符号数平均值子程序
+ 000000ED  55				push ebp	; 入口参数：顺序压入数据个数和数组偏移地址
+ 000000EE  8B EC			mov ebp,esp	; 出口参数：EAX＝平均值
+ 000000F0  53				push ebx	; 保护寄存器
+ 000000F1  51				push ecx
+ 000000F2  52				push edx
+ 000000F3  8B 5D 08			mov ebx,[ebp+8]	; EBX＝堆栈中取出的偏移地址
+ 000000F6  8B 4D 0C			mov ecx,[ebp+12]	; ECX＝堆栈中取出的数据个数
+ 000000F9  33 C0			xor eax,eax	; EAX保存和值
+ 000000FB  33 D2			xor edx,edx	; EDX＝指向数组元素
+ 000000FD  03 04 93		mean1:	add eax,[ebx+edx*4]	; 求和
+ 00000100  83 C2 01			add edx,1	; 指向下一个数据
+ 00000103  3B D1			cmp edx,ecx	; 比较个数
+ 00000105  72 F6			jb mean1	; 循环
+ 00000107  99				cdq	; 将累加和EAX符号扩展到EDX
+ 00000108  F7 F9			idiv ecx	; 有符号数除法，EAX＝平均值（余数在EDX中）
+ 0000010A  5A				pop edx	; 恢复寄存器
+ 0000010B  59				pop ecx
+ 0000010C  5B				pop ebx
+ 0000010D  5D				pop ebp
+ 0000010E  C3				ret
+ 0000010F			mean	endp
+
+					end
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/19/07 15:14:34
+eg0420s.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000002A Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000010F Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+mean . . . . . . . . . . . . . .	P Near	 000000ED _TEXT	Length= 00000022 Public C
+  mean1  . . . . . . . . . . . .	L Near	 000000FD _TEXT	
+read . . . . . . . . . . . . . .	P Near	 00000057 _TEXT	Length= 00000096 Public C
+  read0  . . . . . . . . . . . .	L Near	 0000005B _TEXT	
+  read1  . . . . . . . . . . . .	L Near	 00000086 _TEXT	
+  read2  . . . . . . . . . . . .	L Near	 0000008D _TEXT	
+  readerr  . . . . . . . . . . .	L Near	 000000A3 _TEXT	
+  read3  . . . . . . . . . . . .	L Near	 000000AF _TEXT	
+  read4  . . . . . . . . . . . .	L Near	 000000BF _TEXT	
+  read5  . . . . . . . . . . . .	L Near	 000000C7 _TEXT	
+write  . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000057 Public C
+  write0 . . . . . . . . . . . .	L Near	 00000008 _TEXT	
+  write1 . . . . . . . . . . . .	L Near	 00000022 _TEXT	
+  write2 . . . . . . . . . . . .	L Near	 0000002A _TEXT	
+  write3 . . . . . . . . . . . .	L Near	 00000030 _TEXT	
+  write4 . . . . . . . . . . . .	L Near	 0000003F _TEXT	
+  write5 . . . . . . . . . . . .	L Near	 00000049 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+dispbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispcrlf . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprf . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+errmsg . . . . . . . . . . . . .	Byte	 000000D2 _TEXT	
+readbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbuf  . . . . . . . . . . . .	Byte	 0000000C _DATA	
+readbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+temp . . . . . . . . . . . . . .	DWord	 00000000 FLAT	External STDCALL
+writebuf . . . . . . . . . . . .	Byte	 00000000 _DATA	
+
+	   0 Warnings
+	   0 Errors

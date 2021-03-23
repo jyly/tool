@@ -1,0 +1,138 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/19/07 15:15:58
+eg0420a.asm						     Page 1 - 1
+
+
+				;eg0420a.asm（主程序文件）
+					include io32.inc
+			      C .nolist
+			      C .list
+			      C 
+					extern read:near,write:near,mean:near	; 外部子程序
+					public temp	; 变量共用
+					includelib eg0419.lib
+ 00000000				.data
+ = 0000000A			count	= 10
+ 00000000  0000000A [		array	dword count dup(0)
+	    00000000
+	   ]
+ 00000028 00000000		temp	dword ?
+ 0000002C 45 6E 74 65 72	msg1	byte 'Enter 10 numbers: ',13,10,0
+	   20 31 30 20 6E
+	   75 6D 62 65 72
+	   73 3A 20 0D 0A
+	   00
+ 00000041 54 68 65 20 6D	msg2	byte 'The mean is: ',0
+	   65 61 6E 20 69
+	   73 3A 20 00
+ 00000000				.code
+ 00000000			start:
+ 00000000  B8 0000002C R		mov eax,offset msg1	; 提示输入10个数据
+ 00000005  E8 00000000 E		call dispmsg
+ 0000000A  33 DB			xor ebx,ebx 
+ 0000000C  B9 0000000A			mov ecx,count	; ECX＝数据个数
+ 00000011  E8 00000000 E	again:	call read	; 调用子程序，输入一个数据
+ 00000016  A1 00000028 R		mov eax,temp	; 获得出口参数
+ 0000001B  89 04 9D			mov array [ebx*4],eax 
+	   00000000 R
+ 00000022  83 C3 01			add ebx,1
+ 00000025  83 FB 0A			cmp ebx,count
+ 00000028  72 E7			jb again
+ 0000002A  51				push ecx	; 传递参数
+ 0000002B  68 00000000 R		push offset array
+ 00000030  E8 00000000 E		call mean	; 调用子程序，求平均值
+ 00000035  83 C4 08			add esp,8
+ 00000038  8B D8			mov ebx,eax	; EAX返回值转存到EBX
+ 0000003A  B8 00000041 R		mov eax,offset msg2	; 提示输出平均值
+ 0000003F  E8 00000000 E		call dispmsg 
+ 00000044  8B C3			mov eax,ebx	; 提示输出平均值
+ 00000046  E8 00000000 E		call write	; 调用子程序，显示平均值
+					exit 0
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/19/07 15:15:58
+eg0420a.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000004F Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000052 Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+again  . . . . . . . . . . . . .	L Near	 00000011 _TEXT	
+array  . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+count  . . . . . . . . . . . . .	Number	 0000000Ah   
+dispbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispcrlf . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprf . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+mean . . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+msg1 . . . . . . . . . . . . . .	Byte	 0000002C _DATA	
+msg2 . . . . . . . . . . . . . .	Byte	 00000041 _DATA	
+readbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+read . . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
+temp . . . . . . . . . . . . . .	DWord	 00000028 _DATA	Public STDCALL
+write  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+
+	   0 Warnings
+	   0 Errors

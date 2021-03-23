@@ -1,0 +1,140 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/18/07 18:08:26
+eg0411a.asm						     Page 1 - 1
+
+
+				;eg0411a.asm
+					include io32.inc
+			      C .nolist
+			      C .list
+			      C 
+ 00000000				.data
+ 00000000 EA			key	byte 234
+ 00000001 C4 E3 C4 DC BF	buffer	byte '你能看见我吗？Can you see me?',0	
+	   B4 BC FB CE D2
+	   C2 F0 A3 BF 43
+	   61 6E 20 79 6F
+	   75 20 73 65 65
+	   20 6D 65 3F 00
+ 0000001F 45 6E 63 72 79	msg2	byte 'Encrypted message: ',0
+	   70 74 65 64 20
+	   6D 65 73 73 61
+	   67 65 3A 20 00
+ 00000033 0D 0A 4F 72 69	msg3	byte 13,10,'Original messge: ',0
+	   67 69 6E 61 6C
+	   20 6D 65 73 73
+	   67 65 3A 20 00
+ 00000000				.code
+ 00000000			start:
+ 00000000  B8 0000001D			mov eax,lengthof buffer-1
+ 00000005  50				push eax	; 字符个数保存进入堆栈
+ 00000006  8B C8			mov ecx,eax	; ECX＝实际输入的字符个数，作为循环的次数
+ 00000008  33 DB			xor ebx,ebx	; EBX指向输入字符
+ 0000000A  A0 00000000 R	encrypt:	mov al,key	; AL＝加密关键字
+ 0000000F  30 83 00000001 R		xor buffer[ebx],al	; 异或加密
+ 00000015  43				inc ebx
+ 00000016  49				dec ecx	; 等同于指令：loop encrypt
+ 00000017  75 F1			jnz encrypt	; 处理下一个字符
+ 00000019  B8 0000001F R		mov eax,offset msg2
+ 0000001E  E8 00000000 E		call dispmsg
+ 00000023  B8 00000001 R		mov eax,offset buffer	; 显示加密后的密文
+ 00000028  E8 00000000 E		call dispmsg
+					;
+ 0000002D  59				pop ecx	; 从堆栈弹出字符个数，作为循环的次数
+ 0000002E  33 DB			xor ebx,ebx	; EBX指向输入字符
+ 00000030  A0 00000000 R	decrypt:	mov al,key	; AL＝解密关键字
+ 00000035  30 83 00000001 R		xor buffer[ebx],al	; 异或解密
+ 0000003B  43				inc ebx
+ 0000003C  49				dec ecx
+ 0000003D  75 F1			jnz decrypt	; 处理下一个字符
+ 0000003F  B8 00000033 R		mov eax,offset msg3
+ 00000044  E8 00000000 E		call dispmsg
+ 00000049  B8 00000001 R		mov eax,offset buffer	; 显示解密后的明文
+ 0000004E  E8 00000000 E		call dispmsg
+
+					exit 0
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/18/07 18:08:26
+eg0411a.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000047 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000005A Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+buffer . . . . . . . . . . . . .	Byte	 00000001 _DATA	
+decrypt  . . . . . . . . . . . .	L Near	 00000030 _TEXT	
+dispbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispcrlf . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disphw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprf . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+disprw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+dispuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+encrypt  . . . . . . . . . . . .	L Near	 0000000A _TEXT	
+key  . . . . . . . . . . . . . .	Byte	 00000000 _DATA	
+msg2 . . . . . . . . . . . . . .	Byte	 0000001F _DATA	
+msg3 . . . . . . . . . . . . . .	Byte	 00000033 _DATA	
+readbb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readbw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readc  . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhb . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhd . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readhw . . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readmsg  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readsiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuib  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuid  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+readuiw  . . . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
+
+	   0 Warnings
+	   0 Errors

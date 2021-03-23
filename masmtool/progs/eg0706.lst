@@ -1,0 +1,174 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 14:47:50
+eg0706.asm						     Page 1 - 1
+
+
+				;eg0706.asm in DOS
+					include io16.inc
+			      C .nolist    ; Do not list following content
+			      C .list
+			      C 
+ 0000					.data
+ 0000 41 20 38 32 35 39		intmsg	byte  'A 8259A Interrupt !',0dh,0ah,0
+       41 20 49 6E 74 65
+       72 72 75 70 74 20
+       21 0D 0A 00
+ 0016 00			counter	byte 0	;中断次数记录单元
+ 0000					.code
+ 0000				start:
+ 0000  B8 ---- R			mov ax,@data
+ 0003  8E D8				mov ds,ax
+ 0005  B8 3508				mov ax,3508h	;获取原中断向量
+ 0008  CD 21				int 21h
+ 000A  06				push es	;保存原中断向量（利用堆栈）
+ 000B  53				push bx
+ 000C  FA				cli	;关中断
+ 000D  1E				push ds	;设置新中断向量 
+ 000E  B8 ---- R			mov ax,seg new08h
+ 0011  8E D8				mov ds,ax
+ 0013  BA 0041 R			mov dx,offset new08h
+ 0016  B8 2508				mov ax,2508h
+ 0019  CD 21				int 21h
+ 001B  1F				pop ds
+ 001C  E4 21				in al,21h	;读出IMR
+ 001E  50				push ax	;保存原IMR内容
+ 001F  24 FE				and al,0feh	;允许IRQ0，其他不变
+ 0021  E6 21				out 21h,al	;设置新IMR内容	
+ 0023  C6 06 0016 R 00			mov counter,0	;设置中断次数初值
+ 0028  FB				sti	;开中断
+					;主程序完成中断服务程序设置，可以处理其他事务
+ 0029  80 3E 0016 R 0A		start1:	cmp counter,10	;本例的主程序仅循环等待中断
+ 002E  72 F9				jb start1	;中断10次退出
+					;
+ 0030  FA				cli	;关中断
+ 0031  58				pop ax	;恢复IMR
+ 0032  E6 21				out 21h,al
+ 0034  5A				pop dx	;恢复原中断向量
+ 0035  1F				pop ds
+ 0036  B8 2508				mov ax,2508h
+ 0039  CD 21				int 21h
+ 003B  FB				sti	;开中断
+					exit 0
+ 003C  B8 4C00		     1		mov ax,4c00h+0
+ 003F  CD 21		     1		int 21h
+
+					; 中断服务程序
+ 0041				new08h	proc 
+ 0041  FB				sti	;开中断
+ 0042  50				push ax	;保护寄存器
+ 0043  56				push si
+ 0044  1E				push ds
+ 0045  B8 ---- R			mov ax,@data	;外部随机产生中断，DS也不确定，所以必须设置DS
+ 0048  8E D8				mov ds,ax
+ 004A  FE 06 0016 R			inc counter	;中断次数加1
+ 004E  BE 0000 R			mov si,offset intmsg	;显示信息
+ 0051  E8 0008				call dpstri 
+ 0054  B0 20				mov al,20h	;发送EOI命令
+ 0056  E6 20				out 20h,al
+ 0058  1F				pop ds	;恢复寄存器
+ 0059  5E				pop si
+ 005A  58				pop ax
+ 005B  CF				iret	;中断返回
+ 005C				new08h	endp
+ 005C				dpstri	proc	;显示字符串子程序
+ 005C  50				push ax	;入口参数：DS:SI＝字符串首址
+ 005D  53				push bx
+ 005E  8A 04			dps1:	mov al,[si]
+ 0060  3C 00				cmp al,0
+ 0062  74 0A				jz dps2
+ 0064  BB 0000				mov bx,0	;调用ROM-BIOS功能显示al中的字符
+ 0067  B4 0E				mov ah,0eh
+ 0069  CD 10				int 10h
+ 006B  46				inc si
+ 006C  EB F0				jmp dps1
+ 006E  5B			dps2:	pop bx
+ 006F  58				pop ax
+ 0070  C3				ret
+ 0071				dpstri	endp
+
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 14:47:50
+eg0706.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0017	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0400	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0071	  Word	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+dpstri . . . . . . . . . . . . .	P Near	 005C	  _TEXT	Length= 0015 Public
+  dps1 . . . . . . . . . . . . .	L Near	 005E	  _TEXT	
+  dps2 . . . . . . . . . . . . .	L Near	 006E	  _TEXT	
+new08h . . . . . . . . . . . . .	P Near	 0041	  _TEXT	Length= 001B Public
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+counter  . . . . . . . . . . . .	Byte	 0016	  _DATA	
+dispbb . . . . . . . . . . . . .	L Near	 0000	  External
+dispbd . . . . . . . . . . . . .	L Near	 0000	  External
+dispbw . . . . . . . . . . . . .	L Near	 0000	  External
+dispcrlf . . . . . . . . . . . .	L Near	 0000	  External
+dispc  . . . . . . . . . . . . .	L Near	 0000	  External
+disphb . . . . . . . . . . . . .	L Near	 0000	  External
+disphd . . . . . . . . . . . . .	L Near	 0000	  External
+disphw . . . . . . . . . . . . .	L Near	 0000	  External
+dispmsg  . . . . . . . . . . . .	L Near	 0000	  External
+disprb . . . . . . . . . . . . .	L Near	 0000	  External
+disprd . . . . . . . . . . . . .	L Near	 0000	  External
+disprf . . . . . . . . . . . . .	L Near	 0000	  External
+disprw . . . . . . . . . . . . .	L Near	 0000	  External
+dispsib  . . . . . . . . . . . .	L Near	 0000	  External
+dispsid  . . . . . . . . . . . .	L Near	 0000	  External
+dispsiw  . . . . . . . . . . . .	L Near	 0000	  External
+dispuib  . . . . . . . . . . . .	L Near	 0000	  External
+dispuid  . . . . . . . . . . . .	L Near	 0000	  External
+dispuiw  . . . . . . . . . . . .	L Near	 0000	  External
+intmsg . . . . . . . . . . . . .	Byte	 0000	  _DATA	
+readbb . . . . . . . . . . . . .	L Near	 0000	  External
+readbd . . . . . . . . . . . . .	L Near	 0000	  External
+readbw . . . . . . . . . . . . .	L Near	 0000	  External
+readc  . . . . . . . . . . . . .	L Near	 0000	  External
+readhb . . . . . . . . . . . . .	L Near	 0000	  External
+readhd . . . . . . . . . . . . .	L Near	 0000	  External
+readhw . . . . . . . . . . . . .	L Near	 0000	  External
+readmsg  . . . . . . . . . . . .	L Near	 0000	  External
+readsib  . . . . . . . . . . . .	L Near	 0000	  External
+readsid  . . . . . . . . . . . .	L Near	 0000	  External
+readsiw  . . . . . . . . . . . .	L Near	 0000	  External
+readuib  . . . . . . . . . . . .	L Near	 0000	  External
+readuid  . . . . . . . . . . . .	L Near	 0000	  External
+readuiw  . . . . . . . . . . . .	L Near	 0000	  External
+start1 . . . . . . . . . . . . .	L Near	 0029	  _TEXT	
+start  . . . . . . . . . . . . .	L Near	 0000	  _TEXT	
+
+	   0 Warnings
+	   0 Errors

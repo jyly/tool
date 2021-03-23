@@ -1,0 +1,168 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 17:01:47
+eg0803.asm						     Page 1 - 1
+
+
+				;eg0803.asm for DOS
+					include io16.inc
+			      C .nolist    ; Do not list following content
+			      C .list
+			      C 
+ 0000					.data
+ 0000 57 68 61 74 20 79		msg	byte 'What you see is what you get.',13,10,0
+       6F 75 20 73 65 65
+       20 69 73 20 77 68
+       61 74 20 79 6F 75
+       20 67 65 74 2E 0D
+       0A 00
+ 0000					.code
+ 0000				start:
+ 0000  B8 ---- R			mov ax,@data
+ 0003  8E D8				mov ds,ax
+
+ 0005  B0 80				mov al,80h
+ 0007  BA 02FB				mov dx,2fbh
+ 000A  EE				out dx,al	;写入通信线路控制寄存器，使DLAB＝1
+ 000B  B8 0060				mov ax,96	;分频系数：1.8432MHz÷(1200×16)＝96＝60H
+ 000E  BA 02F8				mov dx,2f8h
+ 0011  EE				out dx,al	;写入除数寄存器低8位
+ 0012  8A C4				mov al,ah
+ 0014  42			 	inc dx
+ 0015  EE				out dx,al	;写入除数寄存器高8位
+ 0016  B0 0A				mov al,00001010b
+ 0018  BA 02FB				mov dx,2fbh
+ 001B  EE			 	out dx,al	;写入通信线路控制寄存器
+ 001C  B0 13				mov al,13h	;循环测试（D4＝1） 
+ 001E  BA 02FC				mov dx,2fch	;禁止中断（D3＝0）
+ 0021  EE				out dx,al
+ 0022  B0 00				mov al,0	;禁止所有中断
+ 0024  BA 02F9			 	mov dx,2f9h
+ 0027  EE				out dx,al	;写入中断允许寄存器（应保证此时DLAB＝0）
+					;
+					;读取通信线路状态，查询工作
+ 0028  BE 0000 R			mov si,offset msg	; SI指向发送信息
+ 002B  BB 0001				mov bx,1	; BX＝1表示需要发送信息
+ 002E  B9 0001				mov cx,1	; CX＝1表示可以接收信息
+ 0031  8B C3			statue:	mov ax,bx
+ 0033  0B C1				or ax,cx	; BX＝CX＝0，表示接收和发送都完成，转向结束
+ 0035  74 44				jz done
+ 0037  BA 02FD				mov dx,2fdh	; 读取通信线路状态寄存器
+ 003A  EC				in al,dx
+ 003B  A8 1E				test al,1eh	; 接收有错误否?
+ 003D  74 0B				jz statue1	; 没有错误，继续
+					; 接收有错，响铃报警
+ 003F  BA 02F8				mov dx,2f8h	; 读出接收有误的数据，丢掉
+ 0042  EC				in al,dx
+ 0043  B0 07				mov al,07h	; 响铃控制的ASCII码为07H
+ 0045  E8 0000 E			call dispc
+ 0048  EB E7				jmp statue	; 继续查询
+ 004A  A8 01			statue1:	test al,01h	; 接收到数据吗?
+ 004C  74 13				jz statue2	; 没有收到数据，继续
+					; 已接收字符，读取该字符并显示（如果是结尾字符，则设置标志）
+ 004E  BA 02F8				mov dx,2f8h	; 从输入缓冲寄存器读取字符
+ 0051  EC				in al,dx
+ 0052  3C 00				cmp al,0	; 是结尾字符吗？ 
+ 0054  75 04				jnz receive
+ 0056  33 C9				xor cx,cx	; CX＝0，不再接收数据
+ 0058  EB D7				jmp statue	; 继续查询
+ 005A  24 7F			receive:	and al,7fh	; 传送标准ASCII码，采用7个数据位，所以仅取低7位
+ 005C  E8 0000 E			call dispc	; 屏幕显示该数据
+ 005F  EB D0				jmp statue	; 继续查询
+ 0061  83 FB 01			statue2:	cmp bx,1	; 有需要发送的字符吗？
+ 0064  75 CB				jne statue	; 无发送字符，继续查询
+ 0066  A8 20				test al,20h	; 保持寄存器空（能输出数据）吗?
+ 0068  74 C7				jz statue	; 不能输出，继续查询
+					; 保持寄存器已空，可以发送数据
+ 006A  8A 04				mov al,[si]	; 获得要发送的字符
+ 006C  46				inc si
+ 006D  3C 00				cmp al,0	; 是结尾字符吗？
+ 006F  75 04				jnz transmit 
+ 0071  33 DB				xor bx,bx	; 无发送字符，设置BX＝0
+ 0073  EB BC				jmp statue	; 继续查询
+ 0075  BA 02F8			transmit:	mov dx,2f8h	; 将字符输出给发送保持寄存器
+ 0078  EE				out dx,al	; 串行发送数据
+ 0079  EB B6				jmp statue	; 继续查询
+ 007B				done:		
+					exit 0
+ 007B  B8 4C00		     1		mov ax,4c00h+0
+ 007E  CD 21		     1		int 21h
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 17:01:47
+eg0803.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0020	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0400	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0080	  Word	  Public  'CODE'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+dispbb . . . . . . . . . . . . .	L Near	 0000	  External
+dispbd . . . . . . . . . . . . .	L Near	 0000	  External
+dispbw . . . . . . . . . . . . .	L Near	 0000	  External
+dispcrlf . . . . . . . . . . . .	L Near	 0000	  External
+dispc  . . . . . . . . . . . . .	L Near	 0000	  External
+disphb . . . . . . . . . . . . .	L Near	 0000	  External
+disphd . . . . . . . . . . . . .	L Near	 0000	  External
+disphw . . . . . . . . . . . . .	L Near	 0000	  External
+dispmsg  . . . . . . . . . . . .	L Near	 0000	  External
+disprb . . . . . . . . . . . . .	L Near	 0000	  External
+disprd . . . . . . . . . . . . .	L Near	 0000	  External
+disprf . . . . . . . . . . . . .	L Near	 0000	  External
+disprw . . . . . . . . . . . . .	L Near	 0000	  External
+dispsib  . . . . . . . . . . . .	L Near	 0000	  External
+dispsid  . . . . . . . . . . . .	L Near	 0000	  External
+dispsiw  . . . . . . . . . . . .	L Near	 0000	  External
+dispuib  . . . . . . . . . . . .	L Near	 0000	  External
+dispuid  . . . . . . . . . . . .	L Near	 0000	  External
+dispuiw  . . . . . . . . . . . .	L Near	 0000	  External
+done . . . . . . . . . . . . . .	L Near	 007B	  _TEXT	
+msg  . . . . . . . . . . . . . .	Byte	 0000	  _DATA	
+readbb . . . . . . . . . . . . .	L Near	 0000	  External
+readbd . . . . . . . . . . . . .	L Near	 0000	  External
+readbw . . . . . . . . . . . . .	L Near	 0000	  External
+readc  . . . . . . . . . . . . .	L Near	 0000	  External
+readhb . . . . . . . . . . . . .	L Near	 0000	  External
+readhd . . . . . . . . . . . . .	L Near	 0000	  External
+readhw . . . . . . . . . . . . .	L Near	 0000	  External
+readmsg  . . . . . . . . . . . .	L Near	 0000	  External
+readsib  . . . . . . . . . . . .	L Near	 0000	  External
+readsid  . . . . . . . . . . . .	L Near	 0000	  External
+readsiw  . . . . . . . . . . . .	L Near	 0000	  External
+readuib  . . . . . . . . . . . .	L Near	 0000	  External
+readuid  . . . . . . . . . . . .	L Near	 0000	  External
+readuiw  . . . . . . . . . . . .	L Near	 0000	  External
+receive  . . . . . . . . . . . .	L Near	 005A	  _TEXT	
+start  . . . . . . . . . . . . .	L Near	 0000	  _TEXT	
+statue1  . . . . . . . . . . . .	L Near	 004A	  _TEXT	
+statue2  . . . . . . . . . . . .	L Near	 0061	  _TEXT	
+statue . . . . . . . . . . . . .	L Near	 0031	  _TEXT	
+transmit . . . . . . . . . . . .	L Near	 0075	  _TEXT	
+
+	   0 Warnings
+	   0 Errors

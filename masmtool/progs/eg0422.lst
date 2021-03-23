@@ -1,0 +1,174 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/19/07 15:54:37
+eg0422.asm						     Page 1 - 1
+
+
+				;eg0422.asm
+					.686
+					.model flat,stdcall
+					option casemap:none
+					includelib bin\kernel32.lib
+				ExitProcess	proto,:DWORD
+				exit	MACRO dwexitcode
+					invoke ExitProcess,dwexitcode
+					ENDM
+
+				GetStdHandle	proto,:DWORD
+				WriteConsoleA	proto,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+ = WriteConsoleA		WriteConsole	equ <WriteConsoleA>
+				ReadConsoleA	proto,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+ = ReadConsoleA			ReadConsole	equ <ReadConsoleA>
+ =-0000000A			STD_INPUT_HANDLE	= -10
+ =-0000000B			STD_OUTPUT_HANDLE	= -11
+
+ 00000000				.data
+ 00000000 50 6C 65 61 73	msg1	byte 'Please enter your name: ',0
+	   65 20 65 6E 74
+	   65 72 20 79 6F
+	   75 72 20 6E 61
+	   6D 65 3A 20 00
+ 00000019 57 65 6C 63 6F	msg2	byte 'Welcome ',0
+	   6D 65 20 00
+ 00000022  00000050 [		nbuf	byte 80 dup(0)
+	    00
+	   ]
+ 00000072 20 74 6F 20 57	msg3	byte ' to Win32 Console!',0
+	   69 6E 33 32 20
+	   43 6F 6E 73 6F
+	   6C 65 21 00
+
+ 00000085 00000000		_outsize	dword ?
+ 00000089 00000000		_outhandle	dword ?
+ 0000008D 00000000		_insize	dd ?
+ 00000091  000000FF [		_inbuffer	byte 255 dup(0)
+	    00
+	   ]
+
+ 00000000				.code
+ 00000000			start:
+ 00000000  B8 00000000 R		mov eax,offset msg1
+ 00000005  E8 0000002F			call dispmsg
+ 0000000A  B8 00000022 R		mov eax,offset nbuf
+ 0000000F  E8 0000005C			call readmsg
+ 00000014  B8 00000019 R		mov eax,offset msg2
+ 00000019  E8 0000001B			call dispmsg
+ 0000001E  B8 00000022 R		mov eax,offset nbuf
+ 00000023  E8 00000011			call dispmsg
+ 00000028  B8 00000072 R		mov eax,offset msg3
+ 0000002D  E8 00000007			call dispmsg
+					
+					exit 0
+
+ 00000039			dispmsg	proc	; 字符串显示子程序，入口参数：EAX＝字符串地址
+ 00000039  50				push eax
+ 0000003A  53				push ebx
+ 0000003B  51				push ecx
+ 0000003C  52				push edx
+ 0000003D  50				push eax	; 保存入口参数，即字符串地址
+					invoke GetStdHandle,STD_OUTPUT_HANDLE
+ 00000045  A3 00000089 R		mov _outhandle,eax
+ 0000004A  5B				pop ebx	; EBX＝字符串地址
+ 0000004B  33 C9			xor ecx,ecx	; 计算字符串长度
+ 0000004D  8A 04 19		dispm1:	mov al,[ebx+ecx]
+ 00000050  84 C0			test al,al	
+ 00000052  74 03			jz dispm2
+ 00000054  41				inc ecx
+ 00000055  EB F6			jmp dispm1
+ 00000057			dispm2:	invoke WriteConsole,_outhandle,ebx,ecx,addr _outsize,0
+ 0000006B  5A				pop edx
+ 0000006C  59				pop ecx
+ 0000006D  5B				pop ebx
+ 0000006E  58				pop eax
+ 0000006F  C3				ret
+ 00000070			dispmsg	endp
+
+ 00000070			readmsg	proc	; 字符串输入子程序，入口参数：EAX＝缓冲区地址
+ 00000070  53				push ebx
+ 00000071  51				push ecx
+ 00000072  52				push edx
+ 00000073  50				push eax	; 保护输入的缓冲区地址参数
+					invoke GetStdHandle,STD_INPUT_HANDLE
+					invoke ReadConsole,eax,addr _inbuffer,255,addr _insize, 0
+ 00000092  83 2D 0000008D R		sub _insize,2
+	   02
+ 00000099  33 C9			xor ecx,ecx
+ 0000009B  5B				pop ebx	; 获得缓冲区地址
+ 0000009C  8A 81 00000091 R	readm1:	mov al,_inbuffer[ecx]
+ 000000A2  88 04 19			mov [ebx+ecx],al	; 将输入的字符串复制到用户缓冲区
+ 000000A5  41				inc ecx
+ 000000A6  3B 0D 0000008D R		cmp ecx,_insize
+ 000000AC  72 EE			jb readm1
+ 000000AE  C6 04 19 00			mov byte ptr [ebx+ecx],0	; 最后填入结尾字符0
+ 000000B2  8B C1			mov eax,ecx
+ 000000B4  5A				pop edx
+ 000000B5  59				pop ecx
+ 000000B6  5B				pop ebx
+ 000000B7  C3				ret
+ 000000B8			readmsg	endp
+
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/19/07 15:54:37
+eg0422.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000190 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000B8 Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetStdHandle . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadConsoleA . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteConsoleA  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+dispmsg  . . . . . . . . . . . .	P Near	 00000039 _TEXT	Length= 00000037 Public STDCALL
+  dispm1 . . . . . . . . . . . .	L Near	 0000004D _TEXT	
+  dispm2 . . . . . . . . . . . .	L Near	 00000057 _TEXT	
+readmsg  . . . . . . . . . . . .	P Near	 00000070 _TEXT	Length= 00000048 Public STDCALL
+  readm1 . . . . . . . . . . . .	L Near	 0000009C _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+ReadConsole  . . . . . . . . . .	Text   	 ReadConsoleA
+STD_INPUT_HANDLE . . . . . . . .	Number	 -0000000Ah   
+STD_OUTPUT_HANDLE  . . . . . . .	Number	 -0000000Bh   
+WriteConsole . . . . . . . . . .	Text   	 WriteConsoleA
+_inbuffer  . . . . . . . . . . .	Byte	 00000091 _DATA	
+_insize  . . . . . . . . . . . .	DWord	 0000008D _DATA	
+_outhandle . . . . . . . . . . .	DWord	 00000089 _DATA	
+_outsize . . . . . . . . . . . .	DWord	 00000085 _DATA	
+msg1 . . . . . . . . . . . . . .	Byte	 00000000 _DATA	
+msg2 . . . . . . . . . . . . . .	Byte	 00000019 _DATA	
+msg3 . . . . . . . . . . . . . .	Byte	 00000072 _DATA	
+nbuf . . . . . . . . . . . . . .	Byte	 00000022 _DATA	
+start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
+
+	   0 Warnings
+	   0 Errors

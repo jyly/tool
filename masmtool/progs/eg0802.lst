@@ -1,0 +1,226 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 16:43:55
+eg0802.asm						     Page 1 - 1
+
+
+				;eg0802.asm in DOS
+					include io16.inc
+			      C .nolist    ; Do not list following content
+			      C .list
+			      C 
+ 0000					.data
+ 0000  000A [			buffer	byte 10 dup(0)	;键盘缓冲区
+        00
+       ]
+ 000A 0000			bufptr1	word 0	;队列头指针
+ 000C 0000			bufptr2	word 0	;队列尾指针
+					;按扫描码顺序给出字符的ASCII码（下档键和小写字母），不能显示的按键为0
+					;第一个0不对应按键，仅用于查表指令
+ 000E 00 01 31 32 33 34		scantb	byte 0,1,'1234567890-=',08h	;键盘第1排的按键，从ESC到退格
+       35 36 37 38 39 30
+       2D 3D 08
+ 001D  00 71 77 65 72 74		byte 0,'qwertyuiop[]',0dh	;键盘第2排的按键，从Tab到回车
+       79 75 69 6F 70 5B
+       5D 0D
+ 002B  00 61 73 64 66 67		byte 0,'asdfghjkl;',27h,'`'	;键盘第3排的按键，从Ctrl到“`”符号
+       68 6A 6B 6C 3B 27
+       60
+ 0038  00 5C 7A 78 63 76		byte 0,'\zxcvbnm,./',0,'*'	;键盘第4排的按键，从SHIFT到“*”符号
+       62 6E 6D 2C 2E 2F
+       00 2A
+ 0046  00 20 00				byte 0,20h,0,10 dup(0)	;ALT、空格、Caps Lock和10个功能键
+       000A [
+        00
+       ]
+ 0053  00 00 37 38 39 2D		byte 0,0,'789-456+1230.'	;右边小键盘，从Num Lock到Del
+       34 35 36 2B 31 32
+       33 30 2E
+ 0000					.code
+ 0000				start:
+ 0000  B8 ---- R			mov ax,@data
+ 0003  8E D8				mov ds,ax
+ 0005  B8 3509				mov ax,3509h	; 获取并保存09H号原中断向量
+ 0008  CD 21				int 21h
+ 000A  06				push es
+ 000B  53				push bx
+ 000C  FA				cli	; 关中断
+ 000D  1E				push ds	; 设置09H号新中断向量
+ 000E  B8 ---- R			mov ax,seg kbint
+ 0011  8E D8				mov ds,ax
+ 0013  BA 006F R			mov dx,offset kbint
+ 0016  B8 2509				mov ax,2509h
+ 0019  CD 21				int 21h
+ 001B  1F				pop ds
+ 001C  E4 21				in al,21h	; 允许IRQ1中断，其他不变
+ 001E  50				push ax
+ 001F  24 FD				and al,0fdh
+ 0021  E6 21				out 21h,al
+ 0023  FB				sti	; 开中断
+ 0024  E8 0025			start1:	call kbget	; 调用KBGET获取按键的ASCII码
+ 0027  3C 01				cmp al,1
+ 0029  74 10				jz start2	; 是ESC键，则退出
+ 002B  50				push ax	; 保护字符
+ 002C  E8 0000 E			call dispc	; 显示字符
+ 002F  58				pop ax	; 恢复字符
+ 0030  3C 0D				cmp al,0dh	; 该字符是回车符吗？
+ 0032  75 F0				jnz start1	; 不是，则取下一个按键字符
+ 0034  B0 0A				mov al,0ah	; 是回车符，则再进行换行
+ 0036  E8 0000 E			call dispc
+ 0039  EB E9				jmp start1	; 继续取字符
+ 003B  FA			start2:	cli	; 恢复中断屏蔽寄存器和中断向量
+ 003C  58				pop ax
+ 003D  E6 21				out 21h,al
+ 003F  5A				pop dx
+ 0040  1F				pop ds
+ 0041  B8 2509				mov ax,2509h
+ 0044  CD 21				int 21h
+ 0046  FB				sti
+
+					exit 0
+ 0047  B8 4C00		     1		mov ax,4c00h+0
+ 004A  CD 21		     1		int 21h
+
+ 004C				kbget	proc
+ 004C  53				push bx	; 保护BX
+ 004D  FA			kbget1:	cli	; 关中断，以防止对缓冲区操作时产生中断又对缓冲区操作
+ 004E  8B 1E 000A R			mov bx,bufptr1	; 取缓冲区队列头指针
+ 0052  3B 1E 000C R			cmp bx,bufptr2	; 与尾指针相等否？
+ 0056  75 03				jnz kbget2	; 不相等，说明缓冲区有字符，转移
+ 0058  FB				sti	; 相等，说明缓冲区空，开中断
+ 0059  EB F2				jmp kbget1	; 等待缓冲区有字符
+ 005B  8A 87 0000 R		kbget2:	mov al,buffer[bx]	; 从队列头取得字符送AL
+ 005F  43				inc bx	; 队列头指针增量
+ 0060  83 FB 0A				cmp bx,10	; 指针是否指向队列末端？
+ 0063  72 03				jc kbget3	; 没有，转移
+ 0065  BB 0000				mov bx,0	; 指针指向队列末端，则循环，指向始端
+ 0068  89 1E 000A R		kbget3:	mov bufptr1,bx	; 设定新的队列头指针
+ 006C  FB				sti	; 开中断
+ 006D  5B				pop bx	; 恢复BX
+ 006E  C3				ret	; 子程序返回
+ 006F				kbget	endp
+					; KBINT中断服务程序处理09H号键盘中断
+ 006F				kbint	proc
+ 006F  FB				sti	; 开中断
+ 0070  50				push ax	; 保护寄存器
+ 0071  53				push bx
+ 0072  E4 60				in al,60h	; 读取键盘扫描码
+ 0074  8A D8				mov bl,al	; 扫描码保存在BL
+ 0076  E4 61				in al,61h	; 使PB7＝1，响应键盘
+ 0078  0C 80				or al,80h
+ 007A  E6 61				out 61h,al
+ 007C  24 7F				and al,7fh	; 使PB7＝0，允许键盘
+ 007E  E6 61				out 61h,al
+ 0080  F6 C3 80				test bl,80h	; 键盘数据处理
+ 0083  75 25				jnz kbint2	; 是断开扫描码，转KBINT2退出
+ 0085  32 FF				xor bh,bh
+ 0087  8A 87 000E R			mov al,scantb[bx]	; 是接通扫描码，转换成ASCII码
+ 008B  3C 00				cmp al,0	; 是否为合法的ASCII码？
+ 008D  74 1B				jz kbint2	; 不是，则转KBINT2退出
+ 008F  8B 1E 000C R			mov bx,bufptr2	; 是，取队列尾指针
+ 0093  88 87 0000 R			mov buffer[bx],al	; 将ASCII码存入缓冲区队列尾
+ 0097  43				inc bx	; 队列尾指针增量
+ 0098  83 FB 0A				cmp bx,10	; 指针是否指向队列末端？
+ 009B  72 03				jc kbint1	; 没有，转移
+ 009D  BB 0000				mov bx,0	; 指针指向队列末端，则循环，指向始端
+ 00A0  3B 1E 000A R		kbint1:	cmp bx,bufptr1	; 缓冲区是否已满？
+ 00A4  74 04				jz kbint2 	; 若队列满，则退出
+ 00A6  89 1E 000C R			mov bufptr2,bx	; 队列不满，设置新的队列尾指针
+ 00AA  B0 20			kbint2:	mov al,20h	; 向中断控制器发送普通中断结束命令
+ 00AC  E6 20				out 20h,al
+ 00AE  5B				pop bx	; 恢复寄存器
+ 00AF  58				pop ax
+ 00B0  CF				iret	; 中断返回
+ 00B1				kbint	endp
+
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 16:43:55
+eg0802.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0062	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0400	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 00B1	  Word	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+kbget  . . . . . . . . . . . . .	P Near	 004C	  _TEXT	Length= 0023 Public
+  kbget1 . . . . . . . . . . . .	L Near	 004D	  _TEXT	
+  kbget2 . . . . . . . . . . . .	L Near	 005B	  _TEXT	
+  kbget3 . . . . . . . . . . . .	L Near	 0068	  _TEXT	
+kbint  . . . . . . . . . . . . .	P Near	 006F	  _TEXT	Length= 0042 Public
+  kbint1 . . . . . . . . . . . .	L Near	 00A0	  _TEXT	
+  kbint2 . . . . . . . . . . . .	L Near	 00AA	  _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+buffer . . . . . . . . . . . . .	Byte	 0000	  _DATA	
+bufptr1  . . . . . . . . . . . .	Word	 000A	  _DATA	
+bufptr2  . . . . . . . . . . . .	Word	 000C	  _DATA	
+dispbb . . . . . . . . . . . . .	L Near	 0000	  External
+dispbd . . . . . . . . . . . . .	L Near	 0000	  External
+dispbw . . . . . . . . . . . . .	L Near	 0000	  External
+dispcrlf . . . . . . . . . . . .	L Near	 0000	  External
+dispc  . . . . . . . . . . . . .	L Near	 0000	  External
+disphb . . . . . . . . . . . . .	L Near	 0000	  External
+disphd . . . . . . . . . . . . .	L Near	 0000	  External
+disphw . . . . . . . . . . . . .	L Near	 0000	  External
+dispmsg  . . . . . . . . . . . .	L Near	 0000	  External
+disprb . . . . . . . . . . . . .	L Near	 0000	  External
+disprd . . . . . . . . . . . . .	L Near	 0000	  External
+disprf . . . . . . . . . . . . .	L Near	 0000	  External
+disprw . . . . . . . . . . . . .	L Near	 0000	  External
+dispsib  . . . . . . . . . . . .	L Near	 0000	  External
+dispsid  . . . . . . . . . . . .	L Near	 0000	  External
+dispsiw  . . . . . . . . . . . .	L Near	 0000	  External
+dispuib  . . . . . . . . . . . .	L Near	 0000	  External
+dispuid  . . . . . . . . . . . .	L Near	 0000	  External
+dispuiw  . . . . . . . . . . . .	L Near	 0000	  External
+readbb . . . . . . . . . . . . .	L Near	 0000	  External
+readbd . . . . . . . . . . . . .	L Near	 0000	  External
+readbw . . . . . . . . . . . . .	L Near	 0000	  External
+readc  . . . . . . . . . . . . .	L Near	 0000	  External
+readhb . . . . . . . . . . . . .	L Near	 0000	  External
+readhd . . . . . . . . . . . . .	L Near	 0000	  External
+readhw . . . . . . . . . . . . .	L Near	 0000	  External
+readmsg  . . . . . . . . . . . .	L Near	 0000	  External
+readsib  . . . . . . . . . . . .	L Near	 0000	  External
+readsid  . . . . . . . . . . . .	L Near	 0000	  External
+readsiw  . . . . . . . . . . . .	L Near	 0000	  External
+readuib  . . . . . . . . . . . .	L Near	 0000	  External
+readuid  . . . . . . . . . . . .	L Near	 0000	  External
+readuiw  . . . . . . . . . . . .	L Near	 0000	  External
+scantb . . . . . . . . . . . . .	Byte	 000E	  _DATA	
+start1 . . . . . . . . . . . . .	L Near	 0024	  _TEXT	
+start2 . . . . . . . . . . . . .	L Near	 003B	  _TEXT	
+start  . . . . . . . . . . . . .	L Near	 0000	  _TEXT	
+
+	   0 Warnings
+	   0 Errors

@@ -25,6 +25,11 @@ from pywt import wavedec
 coeffs = wavedec(y, 'haar', level=3)
 
 cA3, cD3, cD2 , cD1= coeffs
+print(coeffs)
+coeffs = wavedec(y, 'haar', level=2)
+print(coeffs)
+coeffs = wavedec(y, 'haar', level=1)
+print(coeffs)
 
 plt.subplot(311)
 plt.plot(y)

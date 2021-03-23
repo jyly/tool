@@ -1,0 +1,101 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 11:07:16
+eg0703.asm						     Page 1 - 1
+
+
+				;eg0703.asm in DOS
+					include io16.inc
+			      C .nolist    ; Do not list following content
+			      C .list
+			      C 
+ 0000					.data
+ 0000 0D 0A 4E 6F 20 64		msg	byte 0dh,0ah,'No divide overflow !',0
+       69 76 69 64 65 20
+       6F 76 65 72 66 6C
+       6F 77 20 21 00
+ 0000					.code
+ 0000				start:
+ 0000  B8 ---- R			mov ax,@data
+ 0003  8E D8				mov ds,ax
+ 0005  E8 0000 E			call readuiw
+ 0008  B3 01				mov bl,1
+ 000A  F6 F3				div bl
+ 000C  66| B8 00000000 R		mov eax,offset msg
+ 0012  E8 0000 E			call dispmsg
+					exit 0
+ 0015  B8 4C00		     1		mov ax,4c00h+0
+ 0018  CD 21		     1		int 21h
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 11:07:16
+eg0703.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0017	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0400	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 001A	  Word	  Public  'CODE'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+dispbb . . . . . . . . . . . . .	L Near	 0000	  External
+dispbd . . . . . . . . . . . . .	L Near	 0000	  External
+dispbw . . . . . . . . . . . . .	L Near	 0000	  External
+dispcrlf . . . . . . . . . . . .	L Near	 0000	  External
+dispc  . . . . . . . . . . . . .	L Near	 0000	  External
+disphb . . . . . . . . . . . . .	L Near	 0000	  External
+disphd . . . . . . . . . . . . .	L Near	 0000	  External
+disphw . . . . . . . . . . . . .	L Near	 0000	  External
+dispmsg  . . . . . . . . . . . .	L Near	 0000	  External
+disprb . . . . . . . . . . . . .	L Near	 0000	  External
+disprd . . . . . . . . . . . . .	L Near	 0000	  External
+disprf . . . . . . . . . . . . .	L Near	 0000	  External
+disprw . . . . . . . . . . . . .	L Near	 0000	  External
+dispsib  . . . . . . . . . . . .	L Near	 0000	  External
+dispsid  . . . . . . . . . . . .	L Near	 0000	  External
+dispsiw  . . . . . . . . . . . .	L Near	 0000	  External
+dispuib  . . . . . . . . . . . .	L Near	 0000	  External
+dispuid  . . . . . . . . . . . .	L Near	 0000	  External
+dispuiw  . . . . . . . . . . . .	L Near	 0000	  External
+msg  . . . . . . . . . . . . . .	Byte	 0000	  _DATA	
+readbb . . . . . . . . . . . . .	L Near	 0000	  External
+readbd . . . . . . . . . . . . .	L Near	 0000	  External
+readbw . . . . . . . . . . . . .	L Near	 0000	  External
+readc  . . . . . . . . . . . . .	L Near	 0000	  External
+readhb . . . . . . . . . . . . .	L Near	 0000	  External
+readhd . . . . . . . . . . . . .	L Near	 0000	  External
+readhw . . . . . . . . . . . . .	L Near	 0000	  External
+readmsg  . . . . . . . . . . . .	L Near	 0000	  External
+readsib  . . . . . . . . . . . .	L Near	 0000	  External
+readsid  . . . . . . . . . . . .	L Near	 0000	  External
+readsiw  . . . . . . . . . . . .	L Near	 0000	  External
+readuib  . . . . . . . . . . . .	L Near	 0000	  External
+readuid  . . . . . . . . . . . .	L Near	 0000	  External
+readuiw  . . . . . . . . . . . .	L Near	 0000	  External
+start  . . . . . . . . . . . . .	L Near	 0000	  _TEXT	
+
+	   0 Warnings
+	   0 Errors

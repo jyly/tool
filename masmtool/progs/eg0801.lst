@@ -1,0 +1,136 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 16:43:04
+eg0801.asm						     Page 1 - 1
+
+
+				;eg0801.asm in DOS
+					include io16.inc
+			      C .nolist    ; Do not list following content
+			      C .list
+			      C 
+ 0000					.data
+ 0000 07C4			freq	word 1193180/600	;给一个600Hz的频率
+ 0000					.code
+ 0000				start:
+ 0000  B8 ---- R			mov ax,@data
+ 0003  8E D8				mov ds,ax
+ 0005  A1 0000 R			mov ax,freq
+ 0008  E8 000E				call speaker	;设置扬声器的音调
+ 000B  E8 0018				call speakon	;打开扬声器声音
+ 000E  E8 0000 E			call readc	;等待按键
+
+ 0011  E8 001B				call speakoff	;关闭扬声器声音
+					exit 0
+ 0014  B8 4C00		     1		mov ax,4c00h+0
+ 0017  CD 21		     1		int 21h
+					;发音频率设置子程序，入口参数：AX＝1.19318×106÷发音频率
+ 0019				speaker	proc
+ 0019  50				push ax	;暂存入口参数以免被破坏
+ 001A  B0 B6				mov al,0b6h	;定时器2为方式3，先低后高写入16位计数值
+ 001C  E6 43				out 43h,al
+ 001E  58				pop ax	;恢复入口参数
+ 001F  E6 42				out 42h,al	;写入低8位计数值
+ 0021  8A C4				mov al,ah
+ 0023  E6 42				out 42h,al	;写入高8位计数值
+ 0025  C3				ret
+ 0026				speaker	endp
+ 0026				speakon	proc	;扬声器开子程序
+ 0026  50				push ax
+ 0027  E4 61				in al,61h	;读取61H端口的原控制信息
+ 0029  0C 03				or al,03h	;D1D0＝PB1PB0＝11，其他位不变
+ 002B  E6 61				out 61h,al	;直接控制发声
+ 002D  58				pop ax
+ 002E  C3				ret
+ 002F				speakon	endp
+ 002F				speakoff	proc	;扬声器关子程序
+ 002F  50				push ax
+ 0030  E4 61				in al,61h
+ 0032  24 FC				and al,0fch	;D1D0＝PB1PB0＝00，其他位不变 
+ 0034  E6 61				out 61h,al	;直接控制闭音
+ 0036  58				pop ax
+ 0037  C3				ret
+ 0038				speakoff	endp
+
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 16:43:04
+eg0801.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0002	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0400	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0038	  Word	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+speaker  . . . . . . . . . . . .	P Near	 0019	  _TEXT	Length= 000D Public
+speakoff . . . . . . . . . . . .	P Near	 002F	  _TEXT	Length= 0009 Public
+speakon  . . . . . . . . . . . .	P Near	 0026	  _TEXT	Length= 0009 Public
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+dispbb . . . . . . . . . . . . .	L Near	 0000	  External
+dispbd . . . . . . . . . . . . .	L Near	 0000	  External
+dispbw . . . . . . . . . . . . .	L Near	 0000	  External
+dispcrlf . . . . . . . . . . . .	L Near	 0000	  External
+dispc  . . . . . . . . . . . . .	L Near	 0000	  External
+disphb . . . . . . . . . . . . .	L Near	 0000	  External
+disphd . . . . . . . . . . . . .	L Near	 0000	  External
+disphw . . . . . . . . . . . . .	L Near	 0000	  External
+dispmsg  . . . . . . . . . . . .	L Near	 0000	  External
+disprb . . . . . . . . . . . . .	L Near	 0000	  External
+disprd . . . . . . . . . . . . .	L Near	 0000	  External
+disprf . . . . . . . . . . . . .	L Near	 0000	  External
+disprw . . . . . . . . . . . . .	L Near	 0000	  External
+dispsib  . . . . . . . . . . . .	L Near	 0000	  External
+dispsid  . . . . . . . . . . . .	L Near	 0000	  External
+dispsiw  . . . . . . . . . . . .	L Near	 0000	  External
+dispuib  . . . . . . . . . . . .	L Near	 0000	  External
+dispuid  . . . . . . . . . . . .	L Near	 0000	  External
+dispuiw  . . . . . . . . . . . .	L Near	 0000	  External
+freq . . . . . . . . . . . . . .	Word	 0000	  _DATA	
+readbb . . . . . . . . . . . . .	L Near	 0000	  External
+readbd . . . . . . . . . . . . .	L Near	 0000	  External
+readbw . . . . . . . . . . . . .	L Near	 0000	  External
+readc  . . . . . . . . . . . . .	L Near	 0000	  External
+readhb . . . . . . . . . . . . .	L Near	 0000	  External
+readhd . . . . . . . . . . . . .	L Near	 0000	  External
+readhw . . . . . . . . . . . . .	L Near	 0000	  External
+readmsg  . . . . . . . . . . . .	L Near	 0000	  External
+readsib  . . . . . . . . . . . .	L Near	 0000	  External
+readsid  . . . . . . . . . . . .	L Near	 0000	  External
+readsiw  . . . . . . . . . . . .	L Near	 0000	  External
+readuib  . . . . . . . . . . . .	L Near	 0000	  External
+readuid  . . . . . . . . . . . .	L Near	 0000	  External
+readuiw  . . . . . . . . . . . .	L Near	 0000	  External
+start  . . . . . . . . . . . . .	L Near	 0000	  _TEXT	
+
+	   0 Warnings
+	   0 Errors

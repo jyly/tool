@@ -1,0 +1,152 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 14:47:14
+eg0705.asm						     Page 1 - 1
+
+
+				;eg0705.asm in DOS
+					include io16.inc
+			      C .nolist    ; Do not list following content
+			      C .list
+			      C 
+ 0000					.data
+ 0000 0000			intoff	word ?	;用于保存原中断服务程序的偏移地址
+ 0002 0000			intseg	word ? 	;用于保存原中断服务程序的段地址
+ 0004 41 20 49 6E 73 74		intmsg	byte 'A Instruction Interrupt !',0dh,0ah,0	;字符串（以0结尾）
+       72 75 63 74 69 6F
+       6E 20 49 6E 74 65
+       72 72 75 70 74 20
+       21 0D 0A 00
+ 0000					.code
+ 0000				start:
+ 0000  B8 ---- R			mov ax,@data
+ 0003  8E D8				mov ds,ax
+ 0005  B8 3580				mov ax,3580h	;获取系统的原80H中断向量
+ 0008  CD 21				int 21h
+ 000A  89 1E 0000 R			mov intoff,bx	;保存偏移地址
+ 000E  8C 06 0002 R			mov intseg,es	;保存段基地址
+ 0012  1E				push ds
+ 0013  BA 0039 R			mov dx,offset new80h
+ 0016  B8 ---- R			mov ax,seg new80h
+ 0019  8E D8				mov ds,ax
+ 001B  B8 2580				mov ax,2580h	;设置本程序的80H中断向量
+ 001E  CD 21				int 21h
+ 0020  1F				pop ds
+					;
+ 0021  BA 0004 R			mov dx,offset intmsg	;设置入口参数DS和DX
+ 0024  CD 80				int 80h	;调用80H中断服务程序，显示字符串
+					;
+ 0026  8B 16 0000 R			mov dx,intoff	;恢复系统的原80H中断向量
+ 002A  A1 0002 R			mov ax,intseg	;注意先设置DX、后设置DS入口参数
+ 002D  8E D8				mov ds,ax	;因为先改变了DS，就不能准确取得intoff变量值
+ 002F  B8 2580				mov ax,2580h
+ 0032  CD 21				int 21h
+					exit 0
+ 0034  B8 4C00		     1		mov ax,4c00h+0
+ 0037  CD 21		     1		int 21h
+
+					;80H内部中断服务程序：显示字符串（以0结尾）；DS∶DX＝缓冲区首地址
+ 0039				new80h	proc	;过程定义
+ 0039  FB				sti	;开中断
+ 003A  50				push ax	;保护寄存器
+ 003B  53				push bx
+ 003C  56				push si
+ 003D  8B F2				mov si,dx
+ 003F  8A 04			new1:	mov al,[si]	;获取欲显示字符
+ 0041  3C 00				cmp al,0	;为“0”结束
+ 0043  74 0A				jz new2
+ 0045  BB 0000				mov bx,0	;采用ROM-BIOS调用显示一个字符
+ 0048  B4 0E				mov ah,0eh
+ 004A  CD 10				int 10h
+ 004C  46				inc si	;显示下一个字符
+ 004D  EB F0				jmp new1
+ 004F  5E			new2:	pop si	;恢复寄存器
+ 0050  5B				pop bx
+ 0051  58				pop ax
+ 0052  CF				iret	;中断返回
+ 0053				new80h	endp	;中断服务程序结束
+
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 14:47:14
+eg0705.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0020	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0400	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0053	  Word	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+new80h . . . . . . . . . . . . .	P Near	 0039	  _TEXT	Length= 001A Public
+  new1 . . . . . . . . . . . . .	L Near	 003F	  _TEXT	
+  new2 . . . . . . . . . . . . .	L Near	 004F	  _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+dispbb . . . . . . . . . . . . .	L Near	 0000	  External
+dispbd . . . . . . . . . . . . .	L Near	 0000	  External
+dispbw . . . . . . . . . . . . .	L Near	 0000	  External
+dispcrlf . . . . . . . . . . . .	L Near	 0000	  External
+dispc  . . . . . . . . . . . . .	L Near	 0000	  External
+disphb . . . . . . . . . . . . .	L Near	 0000	  External
+disphd . . . . . . . . . . . . .	L Near	 0000	  External
+disphw . . . . . . . . . . . . .	L Near	 0000	  External
+dispmsg  . . . . . . . . . . . .	L Near	 0000	  External
+disprb . . . . . . . . . . . . .	L Near	 0000	  External
+disprd . . . . . . . . . . . . .	L Near	 0000	  External
+disprf . . . . . . . . . . . . .	L Near	 0000	  External
+disprw . . . . . . . . . . . . .	L Near	 0000	  External
+dispsib  . . . . . . . . . . . .	L Near	 0000	  External
+dispsid  . . . . . . . . . . . .	L Near	 0000	  External
+dispsiw  . . . . . . . . . . . .	L Near	 0000	  External
+dispuib  . . . . . . . . . . . .	L Near	 0000	  External
+dispuid  . . . . . . . . . . . .	L Near	 0000	  External
+dispuiw  . . . . . . . . . . . .	L Near	 0000	  External
+intmsg . . . . . . . . . . . . .	Byte	 0004	  _DATA	
+intoff . . . . . . . . . . . . .	Word	 0000	  _DATA	
+intseg . . . . . . . . . . . . .	Word	 0002	  _DATA	
+readbb . . . . . . . . . . . . .	L Near	 0000	  External
+readbd . . . . . . . . . . . . .	L Near	 0000	  External
+readbw . . . . . . . . . . . . .	L Near	 0000	  External
+readc  . . . . . . . . . . . . .	L Near	 0000	  External
+readhb . . . . . . . . . . . . .	L Near	 0000	  External
+readhd . . . . . . . . . . . . .	L Near	 0000	  External
+readhw . . . . . . . . . . . . .	L Near	 0000	  External
+readmsg  . . . . . . . . . . . .	L Near	 0000	  External
+readsib  . . . . . . . . . . . .	L Near	 0000	  External
+readsid  . . . . . . . . . . . .	L Near	 0000	  External
+readsiw  . . . . . . . . . . . .	L Near	 0000	  External
+readuib  . . . . . . . . . . . .	L Near	 0000	  External
+readuid  . . . . . . . . . . . .	L Near	 0000	  External
+readuiw  . . . . . . . . . . . .	L Near	 0000	  External
+start  . . . . . . . . . . . . .	L Near	 0000	  _TEXT	
+
+	   0 Warnings
+	   0 Errors

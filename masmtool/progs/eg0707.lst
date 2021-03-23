@@ -1,0 +1,141 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 14:48:18
+eg0707.asm						     Page 1 - 1
+
+
+				;eg0707.asm in DOS
+					include io16.inc
+			      C .nolist    ; Do not list following content
+			      C .list
+			      C 
+ 0000					.code
+ 0000				new04h	proc	;中断服务程序
+ 0000  FB				sti
+ 0001  50				push ax	;保存寄存器
+ 0002  53				push bx
+ 0003  56				push si
+ 0004  1E				push ds
+ 0005  8C C8				mov ax,cs	;数据在代码段中，故DS＝CS
+ 0007  8E D8				mov ds,ax
+ 0009  BE 0021 R			mov si,offset intmsg
+ 000C  8A 04			dps1:	mov al,[si]
+ 000E  3C 00				cmp al,0
+ 0010  74 0A				jz dps2
+ 0012  BB 0000				mov bx,0	;调用ROM-BIOS功能显示al中的字符
+ 0015  B4 0E				mov ah,0eh
+ 0017  CD 10				int 10h
+ 0019  46				inc si
+ 001A  EB F0				jmp dps1
+ 001C  1F			dps2:	pop ds	;恢复寄存器
+ 001D  5E				pop si
+ 001E  5B				pop bx
+ 001F  58				pop ax
+ 0020  CF				iret	;中断返回
+ 0021 0D 0A 4F 76 65 72		intmsg  byte 0dh,0ah,'Overflow !',0
+       66 6C 6F 77 20 21
+       00
+ 002E				new04h	endp	;中断服务程序结束
+					;主程序开始
+ 002E  8C C8			start:	mov ax,cs
+ 0030  8E D8				mov ds,ax	;设置04H中断向量	
+ 0032  BA 0000 R			mov dx,offset new04h
+ 0035  FA				cli
+ 0036  B8 2504				mov ax,2504h
+ 0039  CD 21				int 21h
+ 003B  FB				sti
+ 003C  B8 0051 R			mov ax,offset tsrmsg	;显示安装信息
+ 003F  E8 0000 E			call dispmsg
+ 0042  BA 002E R			mov dx,offset start	;计算驻留内存程序的长度
+ 0045  81 C2 010F			add dx,256+15
+ 0049  C1 EA 04				shr dx,4	;调整为以“节”（16个字节）为单位
+ 004C  B8 3100				mov ax,3100h	;程序驻留，返回DOS	
+ 004F  CD 21				int 21h
+ 0051 49 4E 54 20 30 34		tsrmsg	byte 'INT 04H Program Installed !',0dh,0ah,0
+       48 20 50 72 6F 67
+       72 61 6D 20 49 6E
+       73 74 61 6C 6C 65
+       64 20 21 0D 0A 00
+					end start
+Microsoft (R) Macro Assembler Version 6.15.8803		    08/20/07 14:48:18
+eg0707.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+exit . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0000	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0400	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 006F	  Word	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+new04h . . . . . . . . . . . . .	P Near	 0000	  _TEXT	Length= 002E Public
+  dps1 . . . . . . . . . . . . .	L Near	 000C	  _TEXT	
+  dps2 . . . . . . . . . . . . .	L Near	 001C	  _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+dispbb . . . . . . . . . . . . .	L Near	 0000	  External
+dispbd . . . . . . . . . . . . .	L Near	 0000	  External
+dispbw . . . . . . . . . . . . .	L Near	 0000	  External
+dispcrlf . . . . . . . . . . . .	L Near	 0000	  External
+dispc  . . . . . . . . . . . . .	L Near	 0000	  External
+disphb . . . . . . . . . . . . .	L Near	 0000	  External
+disphd . . . . . . . . . . . . .	L Near	 0000	  External
+disphw . . . . . . . . . . . . .	L Near	 0000	  External
+dispmsg  . . . . . . . . . . . .	L Near	 0000	  External
+disprb . . . . . . . . . . . . .	L Near	 0000	  External
+disprd . . . . . . . . . . . . .	L Near	 0000	  External
+disprf . . . . . . . . . . . . .	L Near	 0000	  External
+disprw . . . . . . . . . . . . .	L Near	 0000	  External
+dispsib  . . . . . . . . . . . .	L Near	 0000	  External
+dispsid  . . . . . . . . . . . .	L Near	 0000	  External
+dispsiw  . . . . . . . . . . . .	L Near	 0000	  External
+dispuib  . . . . . . . . . . . .	L Near	 0000	  External
+dispuid  . . . . . . . . . . . .	L Near	 0000	  External
+dispuiw  . . . . . . . . . . . .	L Near	 0000	  External
+intmsg . . . . . . . . . . . . .	Byte	 0021	  _TEXT	
+readbb . . . . . . . . . . . . .	L Near	 0000	  External
+readbd . . . . . . . . . . . . .	L Near	 0000	  External
+readbw . . . . . . . . . . . . .	L Near	 0000	  External
+readc  . . . . . . . . . . . . .	L Near	 0000	  External
+readhb . . . . . . . . . . . . .	L Near	 0000	  External
+readhd . . . . . . . . . . . . .	L Near	 0000	  External
+readhw . . . . . . . . . . . . .	L Near	 0000	  External
+readmsg  . . . . . . . . . . . .	L Near	 0000	  External
+readsib  . . . . . . . . . . . .	L Near	 0000	  External
+readsid  . . . . . . . . . . . .	L Near	 0000	  External
+readsiw  . . . . . . . . . . . .	L Near	 0000	  External
+readuib  . . . . . . . . . . . .	L Near	 0000	  External
+readuid  . . . . . . . . . . . .	L Near	 0000	  External
+readuiw  . . . . . . . . . . . .	L Near	 0000	  External
+start  . . . . . . . . . . . . .	L Near	 002E	  _TEXT	
+tsrmsg . . . . . . . . . . . . .	Byte	 0051	  _TEXT	
+
+	   0 Warnings
+	   0 Errors
